@@ -10,9 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-
-const uri =
-  "mongodb+srv://Ticket-Bari:9MNnvNwmKNtMfnuB@book-haven.xdmsye5.mongodb.net/?appName=Book-Haven";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@book-haven.xdmsye5.mongodb.net/?appName=Book-Haven`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
