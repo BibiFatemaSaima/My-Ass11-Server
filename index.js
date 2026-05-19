@@ -1,18 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const port = process.env.PORT || 3000;
-// const cors = require("cors");
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@book-haven.xdmsye5.mongodb.net/?appName=Book-Haven`;
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@book-haven.xdmsye5.mongodb.net/`;
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -22,26 +21,86 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
+
   try {
-    // Connect the client to the server	(optional starting in v4.7)
 
-    // Send a ping to confirm a successful connection
-
+    // database
     const dataBase = client.db("Ticket-Bari");
+
+    // collection
+    const ticketsCollection = dataBase.collection("tickets");
+
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
+      "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+    // =========================================
+    // GET ALL APPROVED TICKETS
+    // =========================================
+
+    app.get("/tickets", async (req, res) => {
+
+      const query = {
+        status: "approved",
+      };
+
+      const result = await ticketsCollection
+        .find(query)
+        .toArray();
+
+      res.send(result);
+
+    });
+
+    // =========================================
+    // GET SINGLE TICKET
+    // =========================================
+
+    app.get("/tickets/:id", async (req, res) => {
+
+      const id = req.params.id;
+
+      const query = {
+        _id: new ObjectId(id),
+      };
+
+      const result = await ticketsCollection.findOne(query);
+
+      res.send(result);
+
+    });
+
+    // =========================================
+    // ADD NEW TICKET
+    // =========================================
+
+    app.post("/tickets", async (req, res) => {
+
+      const newTicket = req.body;
+
+      const result = await ticketsCollection.insertOne(newTicket);
+
+      res.send(result);
+
+    });
+
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+
   }
 }
+
 run().catch(console.dir);
 
+// root route
 app.get("/", (req, res) => {
-  res.send("hello");
+
+  res.send("Ticket Bari Server Running");
+
 });
 
+// server run
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+
+  console.log(`Server running on port ${port}`);
+
 });
