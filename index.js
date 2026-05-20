@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -79,6 +80,44 @@ async function run() {
       const newTicket = req.body;
 
       const result = await ticketsCollection.insertOne(newTicket);
+
+      res.send(result);
+
+    });
+
+    // =========================================
+    // GET VENDOR TICKETS
+    // =========================================
+
+    app.get("/myTickets/:email", async (req, res) => {
+
+      const email = req.params.email;
+
+      const query = {
+        vendorEmail: email,
+      };
+
+      const result = await ticketsCollection
+        .find(query)
+        .toArray();
+
+      res.send(result);
+
+    });
+
+    // =========================================
+    // DELETE TICKET
+    // =========================================
+
+    app.delete("/tickets/:id", async (req, res) => {
+
+      const id = req.params.id;
+
+      const query = {
+        _id: new ObjectId(id),
+      };
+
+      const result = await ticketsCollection.deleteOne(query);
 
       res.send(result);
 
