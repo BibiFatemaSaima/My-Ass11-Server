@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -22,124 +21,144 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
-
   try {
-
-    // database
     const dataBase = client.db("Ticket-Bari");
 
-    // collection
     const ticketsCollection = dataBase.collection("tickets");
+    const bookingsCollection = dataBase.collection("bookings");
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("MongoDB Connected!");
 
-    // =========================================
-    // GET ALL APPROVED TICKETS
-    // =========================================
-
+    // =======================
+    // GET APPROVED TICKETS
+    // =======================
     app.get("/tickets", async (req, res) => {
-
-      const query = {
-        status: "approved",
-      };
-
       const result = await ticketsCollection
-        .find(query)
+        .find({ status: "approved" })
         .toArray();
 
       res.send(result);
-
     });
 
-    // =========================================
+    // =======================
     // GET SINGLE TICKET
-    // =========================================
-
+    // =======================
     app.get("/tickets/:id", async (req, res) => {
-
       const id = req.params.id;
 
-      const query = {
+      const result = await ticketsCollection.findOne({
         _id: new ObjectId(id),
-      };
-
-      const result = await ticketsCollection.findOne(query);
+      });
 
       res.send(result);
-
     });
 
-    // =========================================
-    // ADD NEW TICKET
-    // =========================================
-
+    // =======================
+    // ADD TICKET
+    // =======================
     app.post("/tickets", async (req, res) => {
-
-      const newTicket = req.body;
-
-      const result = await ticketsCollection.insertOne(newTicket);
-
+      const result = await ticketsCollection.insertOne(req.body);
       res.send(result);
-
     });
 
-    // =========================================
-    // GET VENDOR TICKETS
-    // =========================================
-
+    // =======================
+    // MY TICKETS (VENDOR)
+    // =======================
     app.get("/myTickets/:email", async (req, res) => {
-
-      const email = req.params.email;
-
-      const query = {
-        vendorEmail: email,
-      };
-
       const result = await ticketsCollection
-        .find(query)
+        .find({ vendorEmail: req.params.email })
         .toArray();
 
       res.send(result);
-
     });
 
-    // =========================================
+    // =======================
     // DELETE TICKET
-    // =========================================
-
+    // =======================
     app.delete("/tickets/:id", async (req, res) => {
-
-      const id = req.params.id;
-
-      const query = {
-        _id: new ObjectId(id),
-      };
-
-      const result = await ticketsCollection.deleteOne(query);
+      const result = await ticketsCollection.deleteOne({
+        _id: new ObjectId(req.params.id),
+      });
 
       res.send(result);
+    });
 
+    // =======================
+    // UPDATE TICKET
+    // =======================
+    app.put("/tickets/:id", async (req, res) => {
+      const result = await ticketsCollection.updateOne(
+        { _id: new ObjectId(req.params.id) },
+        {
+          $set: req.body,
+        }
+      );
+
+      res.send(result);
+    });
+
+    // =======================
+    // BOOKING + QUANTITY REDUCE (MAIN FIX)
+    // =======================
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+
+      try {
+        // save booking
+        const bookingResult = await bookingsCollection.insertOne(booking);
+
+        // reduce ticket quantity
+        await ticketsCollection.updateOne(
+          { _id: new ObjectId(booking.ticketId) },
+          {
+            $inc: {
+              quantity: -Number(booking.seats),
+            },
+          }
+        );
+
+        res.send(bookingResult);
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Booking failed" });
+      }
+    });
+
+    // =======================
+    // USER BOOKINGS
+    // =======================
+    app.get("/bookings/:email", async (req, res) => {
+      const result = await bookingsCollection
+        .find({ buyerEmail: req.params.email })
+        .toArray();
+
+      res.send(result);
+    });
+
+    // =======================
+    // REQUESTED BOOKINGS (VENDOR)
+    // =======================
+    app.get("/requestedBookings/:email", async (req, res) => {
+      const result = await bookingsCollection
+        .find({ vendorEmail: req.params.email })
+        .toArray();
+
+      res.send(result);
     });
 
   } finally {
-
+    // safe
   }
 }
 
 run().catch(console.dir);
 
-// root route
+// root
 app.get("/", (req, res) => {
-
   res.send("Ticket Bari Server Running");
-
 });
 
-// server run
+// start server
 app.listen(port, () => {
-
   console.log(`Server running on port ${port}`);
-
 });
