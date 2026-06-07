@@ -41,6 +41,7 @@ async function run() {
     const ticketsCollection = dataBase.collection("tickets");
 
     const bookingsCollection = dataBase.collection("bookings");
+    const usersCollection = dataBase.collection("users");
 
     console.log("MongoDB Connected!");
 
@@ -254,6 +255,88 @@ async function run() {
 
       res.send(result);
     });
+    // =======================
+// SAVE USER
+// =======================
+app.post("/users", async (req, res) => {
+  const user = req.body;
+
+  const existingUser = await usersCollection.findOne({
+    email: user.email,
+  });
+
+  if (existingUser) {
+    return res.send({
+      message: "user already exists",
+    });
+  }
+
+  const result = await usersCollection.insertOne(user);
+
+  res.send(result);
+});
+
+// =======================
+// GET USER BY EMAIL
+// =======================
+app.get("/users/:email", async (req, res) => {
+  const email = req.params.email;
+
+  const result = await usersCollection.findOne({
+    email,
+  });
+
+  res.send(result);
+});
+
+// =======================
+// GET ALL USERS
+// =======================
+app.get("/users", async (req, res) => {
+  const result = await usersCollection.find().toArray();
+
+  res.send(result);
+});
+
+// =======================
+// MAKE ADMIN
+// =======================
+app.patch("/users/admin/:id", async (req, res) => {
+  const id = req.params.id;
+
+  const result = await usersCollection.updateOne(
+    {
+      _id: new ObjectId(id),
+    },
+    {
+      $set: {
+        role: "admin",
+      },
+    }
+  );
+
+  res.send(result);
+});
+
+// =======================
+// MAKE VENDOR
+// =======================
+app.patch("/users/vendor/:id", async (req, res) => {
+  const id = req.params.id;
+
+  const result = await usersCollection.updateOne(
+    {
+      _id: new ObjectId(id),
+    },
+    {
+      $set: {
+        role: "vendor",
+      },
+    }
+  );
+
+  res.send(result);
+});
 
     // =======================
     // REJECT BOOKING
