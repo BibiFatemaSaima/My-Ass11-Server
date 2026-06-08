@@ -9,7 +9,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://ass-11-server-sigma.vercel.app",
-      
+
     ],
     credentials: true,
   })
@@ -42,6 +42,7 @@ const client = new MongoClient(uri, {
 // =======================
 async function run() {
   try {
+     console.log("Starting run function...");
     await client.connect();
 
     const db = client.db("Ticket-Bari");
@@ -238,6 +239,9 @@ run().catch(console.dir);
 // =======================
 app.get("/", (req, res) => {
   res.send("Ticket Bari Server Running");
+});
+app.get("/test", (req, res) => {
+  res.send("Test Route Working");
 });
 
 // =======================
