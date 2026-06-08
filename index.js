@@ -228,11 +228,12 @@ async function run() {
 
       res.send({ clientSecret: paymentIntent.client_secret });
     });
-  } finally {
+  } catch (error) {
+    console.error("FULL ERROR =>", error);
   }
 }
 
-run().catch(console.dir);
+run();
 
 // =======================
 // ROOT
