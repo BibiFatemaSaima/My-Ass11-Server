@@ -8,9 +8,10 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://ass-11-server-sigma.vercel.app",
+      "https://candid-caramel-dc52c7.netlify.app",
 
     ],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
 );
